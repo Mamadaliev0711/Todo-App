@@ -10,6 +10,7 @@ function App() {
     description: "",
   });
   const [users, setUsers] = useState([]);
+  const [editingUserId, setEditingUserId] = useState(null);
 
   useEffect(() => {
     const storedData = localStorage.getItem("users");
@@ -37,9 +38,19 @@ function App() {
     )
       return;
 
-    const newUser = { ...formData, id: Date.now() };
-    setUsers((prevUsers) => [...prevUsers, newUser]);
-    localStorage.setItem("users", JSON.stringify([...users, newUser]));
+    if (editingUserId !== null) {
+      const updatedUsers = users.map((user) =>
+        user.id === editingUserId ? { ...formData, id: user.id } : user
+      );
+      setUsers(updatedUsers);
+      localStorage.setItem("users", JSON.stringify(updatedUsers));
+      setEditingUserId(null);
+    } else {
+      const newUser = { ...formData, id: Date.now() };
+      setUsers((prevUsers) => [...prevUsers, newUser]);
+      localStorage.setItem("users", JSON.stringify([...users, newUser]));
+    }
+
     setFormData({
       name: "",
       age: "",
@@ -53,6 +64,14 @@ function App() {
     const updatedUsers = users.filter((user) => user.id !== id);
     setUsers(updatedUsers);
     localStorage.setItem("users", JSON.stringify(updatedUsers));
+  };
+
+  const handleEdit = (id) => {
+    const userToEdit = users.find((user) => user.id === id);
+    if (userToEdit) {
+      setFormData(userToEdit);
+      setEditingUserId(id);
+    }
   };
 
   return (
@@ -176,8 +195,12 @@ function App() {
             type="submit"
             className="btn btn-primary w-100 "
           >
-            <i class="bi bi-person-plus mx-2"></i>
-            Save
+            {editingUserId !== null ? (
+              <i class="bi bi-person-check-fill mx-2"></i>
+            ) : (
+              <i class="bi bi-person-plus mx-2"></i>
+            )}
+            {editingUserId !== null ? "Save Changes" : "Save"}
           </button>
         </form>
 
@@ -203,17 +226,20 @@ function App() {
                   <td>{user.age}</td>
                   <td>{user.gender}</td>
                   <td>{user.language}</td>
-                  <td>
-                    <i class="bi bi-window-stack mx-2"></i>
-                    {user.description}
-                  </td>
+                  <td>{user.description}</td>
                   <td>
                     <button
-                      id="button"
-                      onClick={() => handleDelete(user.id)}
-                      className="btn btn-danger"
+                      onClick={() => handleEdit(user.id)}
+                      className="btn btn-primary btn-sm me-2"
                     >
-                      <i class="bi bi-person-x-fill mx-2"></i>
+                      <i class="bi bi-pencil-square mx-1"></i>
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(user.id)}
+                      className="btn btn-danger btn-sm"
+                    >
+                      <i class="bi bi-person-x-fill mx-1"></i>
                       Delete
                     </button>
                   </td>
